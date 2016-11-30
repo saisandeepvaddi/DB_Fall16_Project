@@ -5,15 +5,26 @@ FOR EACH ROW
 WHEN (NEW.MEMBERSHIP_ID > 0)
 DECLARE
 	validity MEMBERSHIP_DETAILS.VALIDITY%TYPE;
+	old_date DATE;
+	end_date DATE;
+	cid INT;
 BEGIN
-	-- DBMS_OUTPUT.PUT_LINE(:NEW.MEMBERSHIP_ID);
-	-- DBMS_OUTPUT.PUT_LINE(:OLD.CUSTOMER_ID);
+	cid := 0;
+	old_date := :OLD.Membership_Begin_dt;
+	SELECT VALIDITY INTO validity FROM MEMBERSHIP_DETAILS WHERE MEMBERSHIP_ID = :OLD.MEMBERSHIP_ID;
 
-	SELECT M.VALIDITY INTO validity FROM MEMBERSHIP_DETAILS M WHERE M.MEMBERSHIP_ID = :NEW.MEMBERSHIP_ID;
-	:NEW.membership_begin_dt := trunc(sysdate);
-	:NEW.MEMBERSHIP_STATUS := 'ACTIVE';
-	:NEW.membership_end_dt := ADD_MONTHS(trunc(sysdate),validity);
-	-- UPDATE CUSTOMER SET membership_begin_dt = trunc(sysdate), MEMBERSHIP_STATUS = 'ACTIVE', membership_end_dt = end_date where CUSTOMER_ID = :OLD.CUSTOMER_ID;
-	DBMS_OUTPUT.PUT_LINE('Membership details updated for '||:OLD.lname||chr(9)||', '||:OLD.fname);
+
+	SELECT TO_DATE(ADD_MONTHS(:OLD.Membership_Begin_dt,validity)) into end_date FROM DUAL;
+	SELECT count(*) INTO cid FROM CUSTOMER_MEMBERSHIP WHERE CUSTOMER_ID = :OLD.CUSTOMER_ID;
+
+	CASE WHEN cid > 0 THEN
+		UPDATE CUSTOMER_MEMBERSHIP SET Membership_End_Dt = end_date WHERE CUSTOMER_ID = :OLD.CUSTOMER_ID;
+		DBMS_OUTPUT.PUT_LINE('Membership details updated for '||:OLD.lname||chr(9)||', '||:OLD.fname);
+	ELSE
+		INSERT INTO CUSTOMER_MEMBERSHIP (CUSTOMER_ID, Membership_End_Dt) VALUES (:OLD.CUSTOMER_ID, end_date);	
+		DBMS_OUTPUT.PUT_LINE('Membership details updated for '||:OLD.lname||chr(9)||', '||:OLD.fname);
+	END CASE;
+	
+	
 END;
 /

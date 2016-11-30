@@ -72,8 +72,9 @@ CREATE TABLE CUSTOMER
   Age INT,
   Phone VARCHAR(15),
   Membership_Id INT,
-  Membership_Status VARCHAR(20),
-  Membership_End_Dt Date,
+  Membership_Begin_Dt DATE,
+  -- Membership_Status VARCHAR(20),
+  -- Membership_End_Dt Date,
   Card_No VARCHAR(20),
   Apt_No VARCHAR(20),
   Street VARCHAR(20),
@@ -142,4 +143,12 @@ CREATE TABLE EMPLOYEE (
   PRIMARY KEY (SSN),
   FOREIGN KEY (City) REFERENCES CITY_STATE (City) ON DELETE SET NULL,
   FOREIGN KEY (Mgr_Ssn) REFERENCES MGR_BRANCH (Mgr_Ssn) ON DELETE SET NULL
+);
+
+-- 13
+CREATE TABLE CUSTOMER_MEMBERSHIP (
+  Customer_Id INT NOT NULL,
+  Membership_End_Dt DATE,
+  PRIMARY KEY (Customer_Id),
+  FOREIGN KEY (Customer_Id) REFERENCES CUSTOMER (Customer_Id)
 );
