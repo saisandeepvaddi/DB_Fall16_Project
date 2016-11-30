@@ -1,30 +1,34 @@
 DROP TRIGGER END_DATE_TRIGGER; commit;
 CREATE OR REPLACE TRIGGER END_DATE_TRIGGER
 AFTER INSERT OR UPDATE OF MEMBERSHIP_ID ON CUSTOMER
-FOR EACH ROW 
-WHEN (NEW.MEMBERSHIP_ID > 0)
+FOR EACH ROW
 DECLARE
 	validity MEMBERSHIP_DETAILS.VALIDITY%TYPE;
 	old_date DATE;
 	end_date DATE;
 	cid INT;
 BEGIN
-	cid := 0;
-	old_date := :OLD.Membership_Begin_dt;
-	SELECT VALIDITY INTO validity FROM MEMBERSHIP_DETAILS WHERE MEMBERSHIP_ID = :OLD.MEMBERSHIP_ID;
-
-
-	SELECT TO_DATE(ADD_MONTHS(:OLD.Membership_Begin_dt,validity)) into end_date FROM DUAL;
-	SELECT count(*) INTO cid FROM CUSTOMER_MEMBERSHIP WHERE CUSTOMER_ID = :OLD.CUSTOMER_ID;
-
-	CASE WHEN cid > 0 THEN
-		UPDATE CUSTOMER_MEMBERSHIP SET Membership_End_Dt = end_date WHERE CUSTOMER_ID = :OLD.CUSTOMER_ID;
-		DBMS_OUTPUT.PUT_LINE('Membership details updated for '||:OLD.lname||chr(9)||', '||:OLD.fname);
+	
+	IF (:NEW.MEMBERSHIP_ID > 0) THEN
+		-- DBMS_OUTPUT.PUT_LINE(:NEW.MEMBERSHIP_ID);
+		cid := 0;
+		old_date := :OLD.Membership_Begin_dt;
+		-- DBMS_OUTPUT.PUT_LINE(old_date);
+		SELECT VALIDITY INTO validity FROM MEMBERSHIP_DETAILS WHERE MEMBERSHIP_ID = :NEW.MEMBERSHIP_ID;
+		
+		SELECT TO_DATE(ADD_MONTHS(:OLD.Membership_Begin_dt,validity)) into end_date FROM DUAL;
+		SELECT count(*) INTO cid FROM CUSTOMER_MEMBERSHIP WHERE CUSTOMER_ID = :OLD.CUSTOMER_ID;
+		-- DBMS_OUTPUT.PUT_LINE(cid);
+		CASE WHEN cid > 0 THEN
+			UPDATE CUSTOMER_MEMBERSHIP SET Membership_End_Dt = end_date WHERE CUSTOMER_ID = :OLD.CUSTOMER_ID;
+			DBMS_OUTPUT.PUT_LINE('Membership details updated for '||:OLD.lname||chr(9)||', '||:OLD.fname);
+		ELSE
+			INSERT INTO CUSTOMER_MEMBERSHIP (CUSTOMER_ID, Membership_End_Dt) VALUES (:OLD.CUSTOMER_ID, end_date);	
+			DBMS_OUTPUT.PUT_LINE('Membership details updated for '||:OLD.lname||chr(9)||', '||:OLD.fname);
+		END CASE;
 	ELSE
-		INSERT INTO CUSTOMER_MEMBERSHIP (CUSTOMER_ID, Membership_End_Dt) VALUES (:OLD.CUSTOMER_ID, end_date);	
-		DBMS_OUTPUT.PUT_LINE('Membership details updated for '||:OLD.lname||chr(9)||', '||:OLD.fname);
-	END CASE;
-	
-	
+		DBMS_OUTPUT.PUT_LINE('Deleted Membership for the customer '||:OLD.lname||chr(9)||:OLD.fname);
+		DELETE FROM CUSTOMER_MEMBERSHIP WHERE CUSTOMER_ID = :OLD.CUSTOMER_ID;
+	END IF;
 END;
 /
