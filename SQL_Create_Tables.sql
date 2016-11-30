@@ -14,9 +14,9 @@ CREATE TABLE GAME (
 CREATE TABLE MEMBERSHIP_DETAILS(
   Membership_Id INT NOT NULL,
   Membership_Type VARCHAR(20) NOT NULL,
-  Status VARCHAR(20),
   Validity VARCHAR(20),
   Price DECIMAL(5,2),
+  Discount INT,
   PRIMARY KEY (Membership_Id)
 );
 
@@ -74,6 +74,8 @@ CREATE TABLE CUSTOMER
   Card_No VARCHAR(20),
   Membership_Id INT,
   Membership_Begin_Dt DATE,
+  Membership_Status VARCHAR(20),
+  Membership_End_Dt DATE,
   Apt_No VARCHAR(20),
   Street VARCHAR(20),
   City VARCHAR(20),
